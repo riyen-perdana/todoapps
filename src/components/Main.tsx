@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { ClipboardPlus, CirclePlus, X } from "lucide-react";
+import { ClipboardPlus, CirclePlus, X, Divide } from "lucide-react";
 import Modal from "./Modal";
 import {
   DialogContent,
@@ -14,6 +14,10 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { FieldError, FieldGroup } from "./ui/field";
 
 interface Data {
   id: number;
@@ -23,11 +27,34 @@ interface Data {
 }
 [];
 
+const formSchema = z.object({
+  title: z.string().min(1, "Nama Kegiatan Wajib Diisi."),
+  description: z.string().min(1, "Deksripsi Kegiatan Wajib Diisi"),
+});
+
 const Main = () => {
   const [data, setData] = React.useState<Data[]>([]);
   const [open, setOpen] = React.useState(false);
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    resetOptions: {
+      keepDirtyValues: false,
+      keepErrors: false,
+    },
+    defaultValues: {
+      title: "",
+      description: "",
+    },
+    mode: "onChange",
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+  }
+
   const HandlerClick = () => {
+    form.reset();
     setOpen(true);
   };
 
@@ -59,7 +86,7 @@ const Main = () => {
       {/* Modal */}
       <Modal open={open} setOpen={setOpen}>
         <DialogContent
-          className="sm:max-w-100 md:max-w-150"
+          className="sm:max-w-100 md:max-w-150 rounded-none"
           onInteractOutside={(e) => {
             e.preventDefault();
           }}
@@ -71,44 +98,86 @@ const Main = () => {
             </DialogDescription>
             <hr className="border-t border-amber-500" />
           </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-3">
-              <Label htmlFor="title" className="text-[13px] font-semibold">
-                Nama Kegiatan
-              </Label>
-              <Input
-                id="title"
-                name="title"
-                className="rounded-none focus-visible:ring-0 -mt-2 text-sm"
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="grid gap-4">
+              <FieldGroup>
+                <Controller
+                  control={form.control}
+                  name="title"
+                  render={({ field, fieldState }) => (
+                    <div className="grid gap-3">
+                      <Label
+                        htmlFor="title"
+                        className="text-[13px] font-semibold"
+                      >
+                        Nama Kegiatan
+                      </Label>
+                      <Input
+                        id="title"
+                        className={
+                          fieldState.error
+                            ? "border border-red-500 rounded-none -mt-2 sm:text-[10px] focus-visible:ring-0 focus-visible:border-red-500"
+                            : "rounded-none focus-visible:ring-0 -mt-2 sm:text-[10px]"
+                        }
+                        placeholder="Inputkan Nama Kegiatan"
+                        {...field}
+                      />
+                      {fieldState.error && (
+                        <FieldError className="-mt-2 text-xs font-semibold">
+                          {fieldState.error.message}
+                        </FieldError>
+                      )}
+                    </div>
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name="description"
+                  render={({ field, fieldState }) => (
+                    <div className="grid gap-3">
+                      <Label
+                        htmlFor="description"
+                        className="text-[13px] font-semibold"
+                      >
+                        Nama Kegiatan
+                      </Label>
+                      <Textarea
+                        id="description"
+                        className={
+                          fieldState.error
+                            ? "border border-red-500 rounded-none -mt-2 sm:text-[10px] focus-visible:ring-0 focus-visible:border-red-500"
+                            : "rounded-none focus-visible:ring-0 -mt-2 sm:text-[10px]"
+                        }
+                        placeholder="Inputkan Deskripsi Kegiatan"
+                        {...field}
+                      />
+                      {fieldState.error && (
+                        <FieldError className="-mt-2 text-xs font-semibold">
+                          {fieldState.error.message}
+                        </FieldError>
+                      )}
+                    </div>
+                  )}
+                />
+              </FieldGroup>
             </div>
-            <div className="grid gap-3">
-              <Label htmlFor="deskripsi" className="text-[13px] font-semibold">
-                Deskripsi Kegiatan
-              </Label>
-              <Textarea
-                id="deskripsi"
-                name="deskripsi"
-                className="rounded-none focus-visible:ring-0 -mt-2 text-sm"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
+            <DialogFooter className="mt-5">
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  className="text-[13px] rounded-none bg-red-500 text-white hover:bg-red-400 hover:text-white"
+                >
+                  <X /> Batal
+                </Button>
+              </DialogClose>
               <Button
-                variant="outline"
-                className="text-[13px] font-semibold rounded-none bg-red-500 text-white hover:bg-red-400 hover:text-white"
+                type="submit"
+                className="text-[13px] rounded-none bg-green-500 text-white hover:bg-green-400"
               >
-                <X /> Batal
+                <CirclePlus /> Simpan
               </Button>
-            </DialogClose>
-            <Button
-              type="submit"
-              className="text-[13px] font-semibold rounded-none"
-            >
-              <CirclePlus /> Simpan
-            </Button>
-          </DialogFooter>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Modal>
     </React.Fragment>
