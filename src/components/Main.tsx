@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { ClipboardPlus, CirclePlus, X, Divide } from "lucide-react";
+import { ClipboardPlus, CirclePlus, X } from "lucide-react";
 import Modal from "./Modal";
 import {
   DialogContent,
@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { FieldError, FieldGroup } from "./ui/field";
+import Nodata from "./Nodata";
 
 interface Data {
   id: number;
@@ -25,7 +26,6 @@ interface Data {
   description: string;
   isActive: boolean;
 }
-[];
 
 const formSchema = z.object({
   title: z.string().min(1, "Nama Kegiatan Wajib Diisi."),
@@ -38,10 +38,6 @@ const Main = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    resetOptions: {
-      keepDirtyValues: false,
-      keepErrors: false,
-    },
     defaultValues: {
       title: "",
       description: "",
@@ -50,12 +46,26 @@ const Main = () => {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    setData((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        title: values.title,
+        description: values.description,
+        isActive: false,
+      },
+    ]);
+    setOpen(false);
+    form.reset();
   }
 
-  const HandlerClick = () => {
+  const HandlerClick = (): void => {
     form.reset();
     setOpen(true);
+  };
+
+  const handleDelete = (id: number): void => {
+    setData((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
@@ -71,13 +81,47 @@ const Main = () => {
                 Untuk Menambah Data Silahkan Tekan Tombol Tambah
               </p>
             </div>
-            <div className="flex items-center justify-end mt-5">
+            <div className="flex items-center justify-between mt-5">
               <Button
-                className="bg-primary text-white px-2 py-1 rounded-none shadow-none text-[13px]"
+                className="bg-primary text-white px-2 py-1 rounded-none shadow-none text-[13px] ml-auto"
                 onClick={HandlerClick}
               >
                 <ClipboardPlus /> Tambah
               </Button>
+            </div>
+            <div className="flex items-center justify-start mt-5">
+              {data.length > 0 ? (
+                <div className="flex flex-col items-center w-full">
+                  {data.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start justify-between gap-4 mb-2 w-full"
+                    >
+                      {/* KIRI */}
+                      <div className="flex flex-col flex-1 grow">
+                        <p className="text-[13px] font-semibold">
+                          {item.title}
+                        </p>
+                        <p className="text-[12px] font-medium text-gray-600">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* KANAN */}
+                      <div className="flex items-end justify-end gap-2 flex-none">
+                        <Button
+                          className="bg-amber-500 text-white px-2 py-1 rounded-none shadow-none text-[13px] hover:bg-amber-600 min-w-24"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <X /> Hapus
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Nodata />
+              )}
             </div>
           </div>
         </Card>
@@ -139,7 +183,7 @@ const Main = () => {
                         htmlFor="description"
                         className="text-[13px] font-semibold"
                       >
-                        Nama Kegiatan
+                        Deskripsi Kegiatan
                       </Label>
                       <Textarea
                         id="description"
